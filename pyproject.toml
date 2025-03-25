@@ -1,0 +1,10 @@
+[project]
+name = "sgd"
+version = "0.1.0"
+description = "Stochastic Gradient Descent Demo"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "pyqt6>=6.8.1",
+]
