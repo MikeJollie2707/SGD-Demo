@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # Generate synthetic data
 np.random.seed(42)
-X = 2 * np.random.rand(100, 1)  
+X = 2 * np.random.rand(100, 1)
 y = 4 + 3 * X + np.random.randn(100, 1)
 
 def sgd(X, y, learning_rate=0.1, epochs=1000, batch_size=1):
