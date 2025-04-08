@@ -18,6 +18,8 @@ Stochastic Gradient Descent:
 
 ## Resources
 
-- https://www.tensorflow.org/tutorials/keras/classification
+- https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html
 - https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
 - https://docs.astral.sh/uv/concepts/projects/
+- https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
+- https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/13/lecture-13.pdf
