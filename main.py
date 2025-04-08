@@ -30,10 +30,13 @@ def gradient_LSE_lnalg(betas, X_batch, y_batch):
     return 2 * X_batch.T.dot(X_batch.dot(betas) - y_batch)
 
 np.random.seed(42)
-# Vector of inputs
 X = 2 * np.random.rand(100, 1)
-# Vector of outputs
 y = 4 + 3 * X + np.random.randn(100, 1)
+
+# From one of the lecture example.
+# X = np.array([[0], [1], [2]])
+# y = np.array([[4], [3], [1]])
+
 # We'd like to find m and b that best fit this data.
 
 def sgd(X, y, learning_rate, epochs, batch_size):
