@@ -40,6 +40,10 @@ def sgd(X, y, learning_rate=0.1, epochs=1000, batch_size=1):
         # Print progress every 100 epochs
         if epoch % 100 == 0:
             print(f"Epoch {epoch}, Cost: {cost}")
+            print(f"Theta:\n{theta}")
+            print("===================")
+    
+    print(f"Final: {theta}")
 
     return theta, cost_history
 
