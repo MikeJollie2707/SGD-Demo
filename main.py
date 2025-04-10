@@ -147,6 +147,21 @@ def plot3d(beta_history, cost_history):
     plt.show()
 
 
+def plot_bestfit(X, y, beta_final):
+    plt.scatter(X, y, color="blue", label="Data points")
+    plt.plot(
+        X,
+        np.c_[np.ones((X.shape[0], 1)), X].dot(beta_final),
+        color="red",
+        label="SGD fit line",
+    )
+    plt.xlabel("X")
+    plt.ylabel("y")
+    plt.title("Linear Regression using Stochastic Gradient Descent")
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     beta_history, cost_history = sgd(
         X,
