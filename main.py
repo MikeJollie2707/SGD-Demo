@@ -45,6 +45,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     betas = np.random.randn(2, 1)
 
     cost_history = []
+    beta_history = []
 
     for epoch in range(epochs):
         # Move the rows only, keep the column the same.
@@ -55,41 +56,46 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
 
         # For each epoch, we go through all points at least once.
         for i in range(0, X_size, batch_size):
-            X_batch = X_shuffle[i:i + batch_size]
-            y_batch = y_shuffle[i:i + batch_size]
+            X_batch = X_shuffle[i : i + batch_size]
+            y_batch = y_shuffle[i : i + batch_size]
 
             gradient = gradient_LSE_lnalg(betas, X_batch, y_batch)
             if i > 0:
                 velocity = momentum * velocity + gradient
             else:
                 velocity = gradient
-            
+
             betas -= lr * velocity / batch_size
-            
 
         # [1, x] * [[b], [m]] -> [b + x * m]
         predictions = X_bias @ betas
         cost = np.mean(LSE(predictions, y))
-        cost_history.append(cost)
 
         if epoch % 100 == 0:
             print(f"Epoch: {epoch}, cost: {cost}")
             print(f"Beta:\n{betas}")
             print("===================")
-    
+            beta_history.append(betas)
+            cost_history.append(cost)
+
     print(f"Final: b={betas[1][0]}, m={betas[0][0]}")
     predictions = X_bias @ betas
     cost = np.mean(LSE(predictions, y))
     print(f"Cost: {cost}")
+    beta_history.append(betas)
+    cost_history.append(cost)
 
-    return betas, cost_history
+    return beta_history, cost_history
+
 
 
 if __name__ == "__main__":
-    sgd(X, y,
+    beta_history, cost_history = sgd(
+        X,
+        y,
         lr=0.1,
         epochs=1000,
-        batch_size=10, 
+        batch_size=10,
         momentum=0,
-        )
+    )
 
