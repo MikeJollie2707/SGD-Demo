@@ -21,13 +21,12 @@ def gradient_LSE(betas, X_batch, y_batch):
         gradient = np.array([[prediction_diff], [prediction_diff * x_i]])
         gradients += gradient
     return gradients
-
 def gradient_LSE_lnalg(betas, X_batch, y_batch):
-    """Return the gradient of LSE loss function with style.
+    """Return the gradient of LSE loss function with "sTyLe".
     Return: np.array[[change in y-intercept], [change in slope]]
     """
     # https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/13/lecture-13.pdf
-    return 2 * X_batch.T.dot(X_batch.dot(betas) - y_batch)
+    return 2 * X_batch.T @ (X_batch @ betas - y_batch)
 
 np.random.seed(42)
 X = 2 * np.random.rand(100, 1)
@@ -39,7 +38,7 @@ y = 4 + 3 * X + np.random.randn(100, 1)
 
 # We'd like to find m and b that best fit this data.
 
-def sgd(X, y, learning_rate, epochs, batch_size):
+def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     X_size = len(X)
     X_bias = np.c_[np.ones((X_size, 1)), X]
     # [[b], [m]]
@@ -52,14 +51,21 @@ def sgd(X, y, learning_rate, epochs, batch_size):
         indices = np.random.permutation(X_size)
         X_shuffle = X_bias[indices]
         y_shuffle = y[indices]
+        velocity = 0
 
         # For each epoch, we go through all points at least once.
         for i in range(0, X_size, batch_size):
             X_batch = X_shuffle[i:i + batch_size]
             y_batch = y_shuffle[i:i + batch_size]
 
-            gradient = gradient_LSE(betas, X_batch, y_batch)
-            betas -= learning_rate * gradient / batch_size
+            gradient = gradient_LSE_lnalg(betas, X_batch, y_batch)
+            if i > 0:
+                velocity = momentum * velocity + gradient
+            else:
+                velocity = gradient
+            
+            betas -= lr * velocity / batch_size
+            
 
         # [1, x] * [[b], [m]] -> [b + x * m]
         predictions = X_bias @ betas
@@ -71,11 +77,19 @@ def sgd(X, y, learning_rate, epochs, batch_size):
             print(f"Beta:\n{betas}")
             print("===================")
     
-    print(f"Final: {betas}")
+    print(f"Final: b={betas[1][0]}, m={betas[0][0]}")
+    predictions = X_bias @ betas
+    cost = np.mean(LSE(predictions, y))
+    print(f"Cost: {cost}")
 
     return betas, cost_history
 
 
 if __name__ == "__main__":
-    sgd(X, y, 0.1, 1000, 10)
+    sgd(X, y,
+        lr=0.1,
+        epochs=1000,
+        batch_size=10, 
+        momentum=0,
+        )
 
