@@ -6,7 +6,7 @@ def LSE(pred, y):
     return (pred - y) ** 2
 
 
-def gradient_LSE(betas, X_batch, y_batch):
+def gradient_LSE(weights, X_batch, y_batch):
     """Naively return the gradient of LSE loss function.
     Return: np.array[[change in y-intercept], [change in slope]]
     """
@@ -15,8 +15,8 @@ def gradient_LSE(betas, X_batch, y_batch):
     # = <2(mx_i + b - y_i) * 1, 2(mx_i + b - y_i) * x_i>
 
     gradients = np.zeros((2, 1))
-    b = betas[0][0]
-    m = betas[1][0]
+    b = weights[0][0]
+    m = weights[1][0]
     for i in range(len(X_batch)):
         x_i = X_batch[i][1]  # The X_bias is [[1, x_i], ...] and we want x_i
         y_i = y_batch[i][0]
@@ -26,30 +26,18 @@ def gradient_LSE(betas, X_batch, y_batch):
     return gradients
 
 
-def gradient_LSE_lnalg(betas, X_batch, y_batch):
+def gradient_LSE_lnalg(weights, X_batch, y_batch):
     """Return the gradient of LSE loss function with "sTyLe".
     Return: np.array[[change in y-intercept], [change in slope]]
     """
     # https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/13/lecture-13.pdf
-    return 2 * X_batch.T @ (X_batch @ betas - y_batch)
-
-
-np.random.seed(42)
-X = 2 * np.random.rand(100, 1)
-y = 4 + 3 * X + np.random.randn(100, 1)
-
-# From one of the lecture example.
-# X = np.array([[0], [1], [2]])
-# y = np.array([[4], [3], [1]])
-
-# We'd like to find m and b that best fit this data.
+    return 2 * X_batch.T @ (X_batch @ weights - y_batch)
 
 
 def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     X_size = len(X)
-    X_bias = np.c_[np.ones((X_size, 1)), X]
     # [[b], [m]]
-    betas = np.random.randn(2, 1)
+    weights = betas.copy()
 
     cost_history = []
     beta_history = []
@@ -66,30 +54,30 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
             X_batch = X_shuffle[i : i + batch_size]
             y_batch = y_shuffle[i : i + batch_size]
 
-            gradient = gradient_LSE_lnalg(betas, X_batch, y_batch)
+            gradient = gradient_LSE_lnalg(weights, X_batch, y_batch)
             if i > 0:
                 velocity = momentum * velocity + gradient
             else:
                 velocity = gradient
 
-            betas -= lr * velocity / batch_size
+            weights -= lr * velocity / batch_size
 
         # [1, x] * [[b], [m]] -> [b + x * m]
-        predictions = X_bias @ betas
+        predictions = X_bias @ weights
         cost = np.mean(LSE(predictions, y))
 
         if epoch % 100 == 0:
             print(f"Epoch: {epoch}, cost: {cost}")
-            print(f"Beta:\n{betas}")
+            print(f"Beta:\n{weights}")
             print("===================")
-            beta_history.append(betas)
+            beta_history.append(weights.copy())
             cost_history.append(cost)
 
-    print(f"Final: b={betas[1][0]}, m={betas[0][0]}")
-    predictions = X_bias @ betas
+    print(f"Final: b={weights[1][0]}, m={weights[0][0]}")
+    predictions = X_bias @ weights
     cost = np.mean(LSE(predictions, y))
     print(f"Cost: {cost}")
-    beta_history.append(betas)
+    beta_history.append(weights)
     cost_history.append(cost)
 
     return beta_history, cost_history
