@@ -157,12 +157,14 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
 
     markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
 
-    for x, _y, z, color, style in zip(xs, ys, selected_points, colors, markers, strict=True):
+    for x, _y, z, color, style in zip(
+        xs, ys, selected_points, colors, markers, strict=True
+    ):
         ax.scatter(x, _y, z, color=color, marker=style)
 
-    ax.set_xlabel("y-intercept")
-    ax.set_ylabel("slope")
-    ax.set_zlabel("L(w)")
+    ax.set_xlabel("b")
+    ax.set_ylabel("m")
+    ax.set_zlabel("Cost")
     ax.set_xticks(np.arange(b - spanning_radius, b + spanning_radius, 2))
     ax.set_yticks(np.arange(m - spanning_radius, m + spanning_radius, 2))
     ax.set_zticks([])
