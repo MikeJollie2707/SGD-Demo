@@ -38,7 +38,7 @@ Stochastic Gradient Descent: https://en.wikipedia.org/wiki/Stochastic_gradient_d
 
 ![And like this](assets/sample_contour.png)
 
-To view this, here's the data config:
+To replicate this, here's the data config:
 
 ```
 rng = np.random.default_rng(seed=471)
@@ -46,4 +46,9 @@ LEARNING_RATE = 0.0001
 EPOCHS = 1000
 BATCH_SIZE = 10
 MOMENTUM = 0.9
+CENTER_ON = (4, 3)
+CONTOUR_MIN = 20
+CONTOUR_MAX = 400
+CONTOUR_STEP = 25
+EPOCH_PER_POINT = 100
 ```

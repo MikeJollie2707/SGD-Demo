@@ -25,6 +25,7 @@ CENTER_ON = (4, 3)  # Should be on the expected value.
 CONTOUR_MIN = 20
 CONTOUR_MAX = 400
 CONTOUR_STEP = 25
+EPOCH_PER_POINT = 100  # Number of points to plot = EPOCHS / EPOCH_PER_POINT.
 
 
 # We'd like to find m and b that best fit this data.
@@ -102,20 +103,18 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
         # [1, x] * [[b], [m]] -> [b + x * m]
         predictions = X_bias @ weights
         cost = np.mean(LSE(predictions, y))
+        beta_history.append(weights.copy())
+        cost_history.append(cost)
 
         if epoch % 100 == 0:
             print(f"Epoch: {epoch}, cost: {cost}")
             print(f"Beta:\n{weights}")
             print("===================")
-            beta_history.append(weights.copy())
-            cost_history.append(cost)
 
     print(f"Final: m={weights[1][0]}, b={weights[0][0]}")
     predictions = X_bias @ weights
     cost = np.mean(LSE(predictions, y))
     print(f"Cost: {cost}")
-    beta_history.append(weights)
-    cost_history.append(cost)
 
     return beta_history, cost_history
 
@@ -148,6 +147,7 @@ def losses(X_bias, y, weights):
 
 
 def plot3d(*, center_on, beta_history, spanning_radius=6):
+    beta_history = beta_history[::EPOCH_PER_POINT]
     b, m = center_on
     b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
@@ -176,8 +176,8 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
 
     # Plot some of the chosen beta values.
     selected_points = losses(X_bias, Y, np.column_stack(beta_history))
-    color_first = np.array([0, 0, 0, 1]) # Black
-    color_last = np.array([1, 0, 0, 1]) # Red
+    color_first = np.array([0, 0, 0, 1])  # Black
+    color_last = np.array([1, 0, 0, 1])  # Red
     color_between = rng.random((len(selected_points) - 2, 4))
     # Unpack color_between because it is unnecessary nested.
     colors = np.stack((color_first, *color_between, color_last))
@@ -189,7 +189,7 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
         xs, ys, selected_points, colors, markers, strict=True
     ):
         ax.scatter(x, y, z, color=color, marker=style)
-    
+
     # Plot it after the points so it's easier to see the points.
     ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
 
@@ -203,6 +203,7 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
 
 
 def plot_contour(*, center_on, beta_history, spanning_radius=6):
+    beta_history = beta_history[::EPOCH_PER_POINT]
     b, m = center_on
     b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
@@ -235,8 +236,8 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
     ax.clabel(cs, cs.levels, fmt=lambda x: f"{x:.0f}", fontsize=10)
 
     # Plot some of the chosen beta values.
-    color_first = np.array([0, 0, 0, 1])
-    color_last = np.array([1, 0, 0, 1])
+    color_first = np.array([0, 0, 0, 1])  # Black
+    color_last = np.array([1, 0, 0, 1])  # Red
     color_between = rng.random((len(beta_history) - 2, 4))
     # Unpack color_between because it is unnecessary nested.
     colors = np.stack((color_first, *color_between, color_last))
