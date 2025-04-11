@@ -139,10 +139,12 @@ def losses(X_bias, y, weights):
     # https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
 
     # A matrix containing all possible losses for all values of (X, y) and (m, b).
-    loss_matrix = (y - (X_bias @ weights)) ** 2
-    # Find 2-norm of the matrix.
-    # Essentially "collapse" the matrix MxN into 1xN using sum(abs(matrix[i][c]), i=0->M)
-    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2)
+    loss_matrix = y - (X_bias @ weights)
+    # Find 2-norm of the matrix along the column.
+    # This norm is calculated by sum(abs(matrix[i][c]) ** 2, i=0->n) ** (1/2)
+    # Since this operation conveniently sum up all the loss for a particular (b, m), we want to
+    # undo the sqrt at the end, hence ** 2.
+    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2) ** 2
     return all_losses
 
 
