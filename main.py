@@ -2,14 +2,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 np.random.seed(42)
+
+# Data as vectors. X is input vector, Y is expected vector.
 X = 2 * np.random.rand(100, 1)
 Y = 4 + 3 * X + np.random.randn(100, 1)
 
-# From one of the lecture example.
+# From one of the lecture example. Warning: the graph won't look nice because not enough (X, Y).
 # X = np.array([[0], [1], [2]])
-# y = np.array([[4], [3], [1]])
+# Y = np.array([[4], [3], [1]])
+
+# Configure SGD:
+LEARNING_RATE = 0.1  # The smaller the slower it converges.
+EPOCHS = 1000  # Around 5000 max is enough, no need to go crazy.
+BATCH_SIZE = 10
+MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum.
+
+# Configure graph:
+CENTER_ON = (4, 3)
+CONTOUR_MIN = 0
+CONTOUR_MAX = 400
+CONTOUR_STEP = 25
+
 
 # We'd like to find m and b that best fit this data.
+
+# Don't change anything below.
 
 # The regressor matrix. Convenient to have it here cuz we'll use it throughout.
 X_bias = np.c_[np.ones((len(X), 1)), X]
@@ -190,10 +207,10 @@ if __name__ == "__main__":
     beta_history, cost_history = sgd(
         X,
         Y,
-        lr=0.0001,
-        epochs=1000,
-        batch_size=10,
-        momentum=0.2,
+        lr=LEARNING_RATE,
+        epochs=EPOCHS,
+        batch_size=BATCH_SIZE,
+        momentum=MOMENTUM,
     )
 
     plot3d(center_on=(4, 3), beta_history=beta_history, spanning_radius=6)
