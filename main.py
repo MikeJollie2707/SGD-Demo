@@ -188,10 +188,10 @@ if __name__ == "__main__":
     beta_history, cost_history = sgd(
         X,
         y,
-        lr=0.1,
+        lr=0.0001,
         epochs=1000,
         batch_size=10,
-        momentum=0,
+        momentum=0.2,
     )
 
-    plot3d(beta_history, cost_history)
+    plot3d(center_on=(4, 3), beta_history=beta_history, spanning_radius=6)
