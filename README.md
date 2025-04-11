@@ -23,3 +23,7 @@ Stochastic Gradient Descent:
 - https://docs.astral.sh/uv/concepts/projects/
 - https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
 - https://www.stat.cmu.edu/~cshalizi/mreg/15/lectures/13/lecture-13.pdf
+
+## I can't run the code right now, how does it look like?
+
+![Like this](assets/sample_graph.png)
