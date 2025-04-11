@@ -22,10 +22,14 @@ MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum. Don't set momentum too high
 
 # Configure graph:
 CENTER_ON = (4, 3)  # Should be on the expected value.
-CONTOUR_MIN = 20
-CONTOUR_MAX = 400
-CONTOUR_STEP = 25
 EPOCH_PER_POINT = 100  # Number of points to plot = EPOCHS / EPOCH_PER_POINT.
+CONTOUR_LAYOUT = np.concat(
+    (
+        np.arange(0, 200, 50),
+        np.arange(200, 500, 100),
+        np.arange(500, 10000, 1000),
+    )
+)  # np.arange(start, stop, step)
 
 
 # We'd like to find m and b that best fit this data.
@@ -148,6 +152,20 @@ def losses(X_bias, y, weights):
     return all_losses
 
 
+def get_points_info(length: int):
+    """Return colors, markers, and size info for `length` points."""
+
+    color_first = np.array([0, 0, 0, 1])  # Black
+    color_last = np.array([1, 0, 0, 1])  # Red
+    color_between = np.c_[rng.random((length - 2, 3)), np.ones((length - 2, 1))]
+    # Unpack color_between because it is unnecessary nested.
+    colors = np.stack((color_first, *color_between, color_last))
+    markers = ["8"] + ["o"] * (length - 2) + ["*"]
+    sizes = [50] + [15] * (length - 2) + [50]
+
+    return colors, markers, sizes
+
+
 def plot3d(*, center_on, beta_history, spanning_radius=6):
     beta_history = beta_history[::EPOCH_PER_POINT]
     b, m = center_on
@@ -177,20 +195,12 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     ax = fig.add_subplot(111, projection="3d")
 
     # Plot some of the chosen beta values.
-    selected_points = losses(X_bias, Y, np.column_stack(beta_history))
-    color_first = np.array([0, 0, 0, 1])  # Black
-    color_last = np.array([1, 0, 0, 1])  # Red
-    color_between = rng.random((len(selected_points) - 2, 4))
-    # Unpack color_between because it is unnecessary nested.
-    colors = np.stack((color_first, *color_between, color_last))
-
-    # X for first beta value, Square for final beta value, circle for remaining.
-    markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
-
-    for x, y, z, color, style in zip(
-        xs, ys, selected_points, colors, markers, strict=True
+    selected_points_z = losses(X_bias, Y, np.column_stack(beta_history))
+    colors, markers, sizes = get_points_info(len(beta_history))
+    for x, y, z, color, style, size in zip(
+        xs, ys, selected_points_z, colors, markers, sizes, strict=True
     ):
-        ax.scatter(x, y, z, color=color, marker=style)
+        ax.scatter(x, y, z, sizes=(size,), color=color, marker=style)
 
     # Plot it after the points so it's easier to see the points.
     ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
@@ -233,23 +243,18 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
         b_grid,
         m_grid,
         all_losses,
-        levels=np.arange(CONTOUR_MIN, CONTOUR_MAX + CONTOUR_STEP, CONTOUR_STEP),
+        levels=CONTOUR_LAYOUT,
     )
     ax.clabel(cs, cs.levels, fmt=lambda x: f"{x:.0f}", fontsize=10)
 
-    # Plot some of the chosen beta values.
-    color_first = np.array([0, 0, 0, 1])  # Black
-    color_last = np.array([1, 0, 0, 1])  # Red
-    color_between = rng.random((len(beta_history) - 2, 4))
-    # Unpack color_between because it is unnecessary nested.
-    colors = np.stack((color_first, *color_between, color_last))
-
-    # X for first beta value, Square for final beta value, circle for remaining.
-    markers = ["x"] + ["o"] * (len(beta_history) - 2) + ["s"]
-
-    for i, (x, y, color, style) in enumerate(zip(xs, ys, colors, markers, strict=True)):
-        ax.plot(x, y, color=color, marker=style)
-        ax.annotate(f"{i + 1}", (x, y))
+    colors, markers, sizes = get_points_info(len(beta_history))
+    # Plot lines connecting the points to show the order of traversal.
+    ax.plot(xs, ys, color="red", linestyle="dotted")
+    # Plotting points with different marker styles is suprisingly annoying...
+    for i, (x, y, color, style, size) in enumerate(
+        zip(xs, ys, colors, markers, sizes, strict=True)
+    ):
+        ax.scatter(x, y, sizes=(size,), color=color, marker=style)
 
     ax.set_xlabel("b")
     ax.set_ylabel("m")
