@@ -188,6 +188,55 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     plt.show()
 
 
+def plot_contour(*, center_on, beta_history, spanning_radius=6):
+    b, m = center_on
+    b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
+    m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
+    b_grid, m_grid = np.meshgrid(b_range, m_range)
+
+    range_len = len(b_range)
+    # Make [b, m] in (2, 14400) shape
+    all_bm_values = np.hstack([b_grid.flatten()[:, None], m_grid.flatten()[:, None]]).T
+
+    # Compute all losses, reshape back to grid format
+    all_losses = losses(X_bias, Y, all_bm_values).reshape((range_len, range_len))
+
+    xs = []
+    ys = []
+    for betas in beta_history:
+        b = betas[0][0]
+        m = betas[1][0]
+        xs.append(b)
+        ys.append(m)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    cs = ax.contour(
+        b_grid,
+        m_grid,
+        all_losses,
+        levels=np.arange(CONTOUR_MIN, CONTOUR_MAX + CONTOUR_STEP, CONTOUR_STEP),
+    )
+    ax.clabel(cs, cs.levels, fmt=lambda x: f"{x:.0f}", fontsize=10)
+
+    # Plot some of the chosen beta values.
+    color_first = np.array([0, 0, 0, 1])
+    color_last = np.array([1, 0, 0, 1])
+    color_between = np.random.rand(len(beta_history) - 2, 4)
+    colors = np.stack((color_first, *color_between, color_last))
+
+    markers = ["x"] + ["o"] * (len(beta_history) - 2) + ["s"]
+
+    for i, (x, y, color, style) in enumerate(zip(xs, ys, colors, markers, strict=True)):
+        ax.plot(x, y, color=color, marker=style)
+        ax.annotate(f"{i + 1}", (x, y))
+
+    ax.set_xlabel("b")
+    ax.set_ylabel("m")
+    ax.set_xticks(np.arange(b - spanning_radius, b + spanning_radius, 2))
+    ax.set_yticks(np.arange(m - spanning_radius, m + spanning_radius, 2))
+    plt.show()
+
+
 def plot_bestfit(X, y, beta_final):
     plt.scatter(X, y, color="blue", label="Data points")
     plt.plot(
@@ -213,4 +262,6 @@ if __name__ == "__main__":
         momentum=MOMENTUM,
     )
 
-    plot3d(center_on=(4, 3), beta_history=beta_history, spanning_radius=6)
+    plot_bestfit(X, Y, beta_history[-1])
+    plot3d(center_on=CENTER_ON, beta_history=beta_history, spanning_radius=6)
+    plot_contour(center_on=CENTER_ON, beta_history=beta_history, spanning_radius=6)
