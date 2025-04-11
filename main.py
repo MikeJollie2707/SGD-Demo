@@ -3,7 +3,7 @@ import numpy as np
 
 np.random.seed(42)
 X = 2 * np.random.rand(100, 1)
-y = 4 + 3 * X + np.random.randn(100, 1)
+Y = 4 + 3 * X + np.random.randn(100, 1)
 
 # From one of the lecture example.
 # X = np.array([[0], [1], [2]])
@@ -133,7 +133,7 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     all_bm_values = np.hstack([b_grid.flatten()[:, None], m_grid.flatten()[:, None]]).T
 
     # Compute all losses, reshape back to grid format
-    all_losses = losses(X_bias, y, all_bm_values).reshape((range_len, range_len))
+    all_losses = losses(X_bias, Y, all_bm_values).reshape((range_len, range_len))
 
     xs = []
     ys = []
@@ -149,7 +149,7 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
 
     # Plot some of the chosen beta values.
-    selected_points = losses(X_bias, y, np.column_stack(beta_history))
+    selected_points = losses(X_bias, Y, np.column_stack(beta_history))
     color_first = np.array([0, 0, 0, 1])
     color_last = np.array([1, 0, 0, 1])
     color_between = np.random.rand(len(selected_points) - 2, 4)
@@ -157,10 +157,10 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
 
     markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
 
-    for x, _y, z, color, style in zip(
+    for x, y, z, color, style in zip(
         xs, ys, selected_points, colors, markers, strict=True
     ):
-        ax.scatter(x, _y, z, color=color, marker=style)
+        ax.scatter(x, y, z, color=color, marker=style)
 
     ax.set_xlabel("b")
     ax.set_ylabel("m")
@@ -189,7 +189,7 @@ def plot_bestfit(X, y, beta_final):
 if __name__ == "__main__":
     beta_history, cost_history = sgd(
         X,
-        y,
+        Y,
         lr=0.0001,
         epochs=1000,
         batch_size=10,
