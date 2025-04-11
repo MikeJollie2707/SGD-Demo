@@ -1,6 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+np.random.seed(42)
+X = 2 * np.random.rand(100, 1)
+y = 4 + 3 * X + np.random.randn(100, 1)
+
+# From one of the lecture example.
+# X = np.array([[0], [1], [2]])
+# y = np.array([[4], [3], [1]])
+
+# We'd like to find m and b that best fit this data.
+
+# The regressor matrix. Convenient to have it here cuz we'll use it throughout.
+X_bias = np.c_[np.ones((len(X), 1)), X]
+betas = np.random.randn(2, 1)
+
 
 def LSE(pred, y):
     return (pred - y) ** 2
@@ -139,7 +153,7 @@ def plot_bestfit(X, y, beta_final):
     plt.scatter(X, y, color="blue", label="Data points")
     plt.plot(
         X,
-        np.c_[np.ones((X.shape[0], 1)), X].dot(beta_final),
+        X_bias @ beta_final,
         color="red",
         label="SGD fit line",
     )
