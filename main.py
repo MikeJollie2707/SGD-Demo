@@ -1,25 +1,25 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-np.random.seed(42)
+rng = np.random.default_rng(42)
 
 # Data as vectors. X is input vector, Y is expected vector.
-X = 2 * np.random.rand(100, 1)
-Y = 4 + 3 * X + np.random.randn(100, 1)
+X = 2 * rng.random((100, 1))
+Y = 4 + 3 * X + rng.standard_normal((100, 1))
 
 # From one of the lecture example. Warning: the graph won't look nice because not enough (X, Y).
 # X = np.array([[0], [1], [2]])
 # Y = np.array([[4], [3], [1]])
 
 # Configure SGD:
-LEARNING_RATE = 0.1  # The smaller the slower it converges.
-EPOCHS = 1000  # Around 5000 max is enough, no need to go crazy.
+LEARNING_RATE = 0.0001  # Between 0 and 0.1. The smaller the slower it converges.
+EPOCHS = 5000  # Around 5000 max is enough, no need to go crazy.
 BATCH_SIZE = 10
-MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum.
+MOMENTUM = 0.0  # Between 0 and 1; 0 is no momentum. Don't set momentum too high when learning rate is high.
 
 # Configure graph:
-CENTER_ON = (4, 3)
-CONTOUR_MIN = 0
+CENTER_ON = (4, 3)  # Should be on the expected value.
+CONTOUR_MIN = 20
 CONTOUR_MAX = 400
 CONTOUR_STEP = 25
 
@@ -30,7 +30,7 @@ CONTOUR_STEP = 25
 
 # The regressor matrix. Convenient to have it here cuz we'll use it throughout.
 X_bias = np.c_[np.ones((len(X), 1)), X]
-betas = np.random.randn(2, 1)
+betas = rng.standard_normal((2, 1))
 
 
 def LSE(pred, y):
@@ -75,7 +75,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
 
     for epoch in range(epochs):
         # Move the rows only, keep the column the same.
-        indices = np.random.permutation(X_size)
+        indices = rng.permutation(X_size)
         X_shuffle = X_bias[indices]
         y_shuffle = y[indices]
         velocity = 0
@@ -169,7 +169,7 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     selected_points = losses(X_bias, Y, np.column_stack(beta_history))
     color_first = np.array([0, 0, 0, 1])
     color_last = np.array([1, 0, 0, 1])
-    color_between = np.random.rand(len(selected_points) - 2, 4)
+    color_between = rng.random((len(selected_points) - 2, 4))
     colors = np.stack((color_first, *color_between, color_last))
 
     markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
@@ -221,7 +221,7 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
     # Plot some of the chosen beta values.
     color_first = np.array([0, 0, 0, 1])
     color_last = np.array([1, 0, 0, 1])
-    color_between = np.random.rand(len(beta_history) - 2, 4)
+    color_between = rng.random((len(beta_history) - 2, 4))
     colors = np.stack((color_first, *color_between, color_last))
 
     markers = ["x"] + ["o"] * (len(beta_history) - 2) + ["s"]
