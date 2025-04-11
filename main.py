@@ -1,7 +1,10 @@
+# The general structure of this file is borrowed from:
+# https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-rng = np.random.default_rng(42)
+rng = np.random.default_rng(seed=471)
 
 # Data as vectors. X is input vector, Y is expected vector.
 X = 2 * rng.random((100, 1))
@@ -13,9 +16,9 @@ Y = 4 + 3 * X + rng.standard_normal((100, 1))
 
 # Configure SGD:
 LEARNING_RATE = 0.0001  # Between 0 and 0.1. The smaller the slower it converges.
-EPOCHS = 5000  # Around 5000 max is enough, no need to go crazy.
+EPOCHS = 1000  # Around 5000 max is enough, no need to go crazy.
 BATCH_SIZE = 10
-MOMENTUM = 0.0  # Between 0 and 1; 0 is no momentum. Don't set momentum too high when learning rate is high.
+MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum. Don't set momentum too high when learning rate is high.
 
 # Configure graph:
 CENTER_ON = (4, 3)  # Should be on the expected value.
@@ -66,6 +69,7 @@ def gradient_LSE_lnalg(weights, X_batch, y_batch):
 
 
 def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
+    # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     X_size = len(X)
     # [[b], [m]]
     weights = betas.copy()
@@ -85,6 +89,8 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
             X_batch = X_shuffle[i : i + batch_size]
             y_batch = y_shuffle[i : i + batch_size]
 
+            # https://pytorch.org/docs/stable/generated/torch.optim.SGD.html
+            # Changed to simple momentum formula because dampening seems overkill.
             gradient = gradient_LSE_lnalg(weights, X_batch, y_batch)
             if i > 0:
                 velocity = momentum * velocity + gradient
@@ -119,18 +125,20 @@ def losses(X_bias, y, weights):
 
     Parameters
     ----------
-    X_bias : _type_
+    X_bias : NDArray
         An `nx2` matrix with its first column filled with 1s and second column filled with all possible values of x.
-    y : _type_
+    y : NDArray
         A `nx1` vector containing all expected value of the function.
-    weights : _type_
+    weights : NDArray
         A `2xm` matrix containing parameters to the function.
 
     Returns
     -------
-    _type_
+    NDArray
         Return a column vector containing total losses.
     """
+    # https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
+
     # A matrix containing all possible losses for all values of (X, y) and (m, b).
     loss_matrix = (y - (X_bias @ weights)) ** 2
     # Find 2-norm of the matrix.
@@ -145,13 +153,15 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
     b_grid, m_grid = np.meshgrid(b_range, m_range)
 
+    # https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
     range_len = len(b_range)
-    # Make [b, m] in (2, 14400) shape
+    # Make [b, m] in (2, n) shape
     all_bm_values = np.hstack([b_grid.flatten()[:, None], m_grid.flatten()[:, None]]).T
 
     # Compute all losses, reshape back to grid format
     all_losses = losses(X_bias, Y, all_bm_values).reshape((range_len, range_len))
 
+    # There's probably a better way to do this but it works and it's readable so :/
     xs = []
     ys = []
     for betas in beta_history:
@@ -163,21 +173,25 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
     # Graph loss function.
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111, projection="3d")
-    ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
 
     # Plot some of the chosen beta values.
     selected_points = losses(X_bias, Y, np.column_stack(beta_history))
-    color_first = np.array([0, 0, 0, 1])
-    color_last = np.array([1, 0, 0, 1])
+    color_first = np.array([0, 0, 0, 1]) # Black
+    color_last = np.array([1, 0, 0, 1]) # Red
     color_between = rng.random((len(selected_points) - 2, 4))
+    # Unpack color_between because it is unnecessary nested.
     colors = np.stack((color_first, *color_between, color_last))
 
+    # X for first beta value, Square for final beta value, circle for remaining.
     markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
 
     for x, y, z, color, style in zip(
         xs, ys, selected_points, colors, markers, strict=True
     ):
         ax.scatter(x, y, z, color=color, marker=style)
+    
+    # Plot it after the points so it's easier to see the points.
+    ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
 
     ax.set_xlabel("b")
     ax.set_ylabel("m")
@@ -194,13 +208,15 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
     b_grid, m_grid = np.meshgrid(b_range, m_range)
 
+    # https://aunnnn.github.io/ml-tutorial/html/blog_content/linear_regression/linear_regression_tutorial.html
     range_len = len(b_range)
-    # Make [b, m] in (2, 14400) shape
+    # Make [b, m] in (2, n) shape
     all_bm_values = np.hstack([b_grid.flatten()[:, None], m_grid.flatten()[:, None]]).T
 
     # Compute all losses, reshape back to grid format
     all_losses = losses(X_bias, Y, all_bm_values).reshape((range_len, range_len))
 
+    # There's probably a better way to do this but it works and it's readable so :/
     xs = []
     ys = []
     for betas in beta_history:
@@ -222,8 +238,10 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
     color_first = np.array([0, 0, 0, 1])
     color_last = np.array([1, 0, 0, 1])
     color_between = rng.random((len(beta_history) - 2, 4))
+    # Unpack color_between because it is unnecessary nested.
     colors = np.stack((color_first, *color_between, color_last))
 
+    # X for first beta value, Square for final beta value, circle for remaining.
     markers = ["x"] + ["o"] * (len(beta_history) - 2) + ["s"]
 
     for i, (x, y, color, style) in enumerate(zip(xs, ys, colors, markers, strict=True)):
@@ -238,12 +256,13 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
 
 
 def plot_bestfit(X, y, beta_final):
+    # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     plt.scatter(X, y, color="blue", label="Data points")
     plt.plot(
         X,
         X_bias @ beta_final,
         color="red",
-        label="SGD fit line",
+        label=f"y = {beta_final[0][0]:.2f} + {beta_final[1][0]:.2f}x",
     )
     plt.xlabel("X")
     plt.ylabel("y")
