@@ -110,7 +110,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
             beta_history.append(weights.copy())
             cost_history.append(cost)
 
-    print(f"Final: b={weights[1][0]}, m={weights[0][0]}")
+    print(f"Final: m={weights[1][0]}, b={weights[0][0]}")
     predictions = X_bias @ weights
     cost = np.mean(LSE(predictions, y))
     print(f"Cost: {cost}")
