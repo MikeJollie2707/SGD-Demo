@@ -97,28 +97,43 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     return beta_history, cost_history
 
 
-def plot3d(beta_history, cost_history):
-    spanning_radius = 1
-    b_range = np.arange(4 - spanning_radius, 4 + spanning_radius, 0.05)
-    m_range = np.arange(3 - spanning_radius, 3 + spanning_radius, 0.05)
+def losses(X_bias, y, weights):
+    """Return a column vector containing total losses.
+
+    Parameters
+    ----------
+    X_bias : _type_
+        An `nx2` matrix with its first column filled with 1s and second column filled with all possible values of x.
+    y : _type_
+        A `nx1` vector containing all expected value of the function.
+    weights : _type_
+        A `2xm` matrix containing parameters to the function.
+
+    Returns
+    -------
+    _type_
+        Return a column vector containing total losses.
+    """
+    # A matrix containing all possible losses for all values of (X, y) and (m, b).
+    loss_matrix = (y - (X_bias @ weights)) ** 2
+    # Find 2-norm of the matrix.
+    # Essentially "collapse" the matrix MxN into 1xN using sum(abs(matrix[i][c]), i=0->M)
+    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2)
+    return all_losses
+
+
+def plot3d(*, center_on, beta_history, spanning_radius=6):
+    b, m = center_on
+    b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
+    m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
     b_grid, m_grid = np.meshgrid(b_range, m_range)
 
     range_len = len(b_range)
-    # Make [w0, w1] in (2, 14400) shape
-    all_w0w1_values = np.hstack(
-        [b_grid.flatten()[:, None], m_grid.flatten()[:, None]]
-    ).T
+    # Make [b, m] in (2, 14400) shape
+    all_bm_values = np.hstack([b_grid.flatten()[:, None], m_grid.flatten()[:, None]]).T
 
     # Compute all losses, reshape back to grid format
-    # Magic stuff, no idea what's happening here :)
-    all_losses = (
-        np.linalg.norm(
-            y - (np.c_[np.ones((len(X), 1)), X] @ all_w0w1_values), axis=0, ord=2
-        )
-        ** 2
-    ).reshape((range_len, range_len))
-
-    print(((y - (np.c_[np.ones((len(X), 1)), X] @ all_w0w1_values))**2).shape)
+    all_losses = losses(X_bias, y, all_bm_values).reshape((range_len, range_len))
 
     xs = []
     ys = []
@@ -128,23 +143,28 @@ def plot3d(beta_history, cost_history):
         xs.append(b)
         ys.append(m)
 
-    def fmt(x):
-        return f"{x:.1f}"
-
+    # Graph loss function.
     fig = plt.figure(figsize=(10, 6))
     ax = fig.add_subplot(111, projection="3d")
     ax.plot_surface(b_grid, m_grid, all_losses, alpha=0.5, cmap="RdBu")
-    cs = ax.contour(b_grid, m_grid, all_losses, offset=0, alpha=1, cmap="RdBu")
-    ax.clabel(cs, cs.levels, fmt=fmt, fontsize=10)
-    
-    ax.scatter(xs[:-1], ys[:-1], cost_history[:-1], c="green")
-    ax.scatter(xs[-1], ys[-1], cost_history[-1], c="red")
-    
+
+    # Plot some of the chosen beta values.
+    selected_points = losses(X_bias, y, np.column_stack(beta_history))
+    color_first = np.array([0, 0, 0, 1])
+    color_last = np.array([1, 0, 0, 1])
+    color_between = np.random.rand(len(selected_points) - 2, 4)
+    colors = np.stack((color_first, *color_between, color_last))
+
+    markers = ["x"] + ["o"] * (len(selected_points) - 2) + ["s"]
+
+    for x, _y, z, color, style in zip(xs, ys, selected_points, colors, markers, strict=True):
+        ax.scatter(x, _y, z, color=color, marker=style)
+
     ax.set_xlabel("y-intercept")
     ax.set_ylabel("slope")
     ax.set_zlabel("L(w)")
-    ax.set_xticks(np.arange(4 - spanning_radius, 4 + spanning_radius, 2))
-    ax.set_yticks(np.arange(3 - spanning_radius, 3 + spanning_radius, 2))
+    ax.set_xticks(np.arange(b - spanning_radius, b + spanning_radius, 2))
+    ax.set_yticks(np.arange(m - spanning_radius, m + spanning_radius, 2))
     ax.set_zticks([])
     plt.show()
 
