@@ -38,7 +38,6 @@ CONTOUR_LAYOUT = np.concat(
 
 # The regressor matrix. Convenient to have it here cuz we'll use it throughout.
 X_bias = np.c_[np.ones((len(X), 1)), X]
-betas = rng.standard_normal((2, 1))
 
 
 def LSE(pred, y):
@@ -77,7 +76,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     X_size = len(X)
     # [[b], [m]]
-    weights = betas.copy()
+    weights = rng.standard_normal((2, 1))
 
     cost_history = []
     beta_history = []
