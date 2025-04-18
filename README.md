@@ -38,7 +38,7 @@ Stochastic Gradient Descent: https://en.wikipedia.org/wiki/Stochastic_gradient_d
 
 ![And like this](assets/sample_contour.png)
 
-To view this, here's the data config:
+To replicate this, here's the data config:
 
 ```
 rng = np.random.default_rng(seed=471)
@@ -46,4 +46,27 @@ LEARNING_RATE = 0.0001
 EPOCHS = 1000
 BATCH_SIZE = 10
 MOMENTUM = 0.9
+CENTER_ON = (4, 3)
+CONTOUR_MIN = 20
+CONTOUR_MAX = 400
+CONTOUR_STEP = 25
+EPOCH_PER_POINT = 100
 ```
+
+## Setup
+
+If you have `uv` installed, after cloning, simply run `uv sync`, then `uv run main.py`. If you don't want to bother with `uv` and only want to deal with `pip`, follow the below instructions.
+
+Install dependencies from `requirements.txt` (note: I don't actively maintain this file):
+
+```sh
+python -m pip install -r requirements.txt
+```
+
+Run `main.py`:
+
+```sh
+python main.py
+```
+
+Replace `python` with the actual Python binary installed on your system (typically `py -3` on Windows, `python3` on Linux, etc.)
