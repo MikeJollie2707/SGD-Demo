@@ -52,3 +52,21 @@ CONTOUR_MAX = 400
 CONTOUR_STEP = 25
 EPOCH_PER_POINT = 100
 ```
+
+## Setup
+
+If you have `uv` installed, after cloning, simply run `uv sync`, then `uv run main.py`. If you don't want to bother with `uv` and only want to deal with `pip`, follow the below instructions.
+
+Install dependencies from `requirements.txt` (note: I don't actively maintain this file):
+
+```sh
+python -m pip install -r requirements.txt
+```
+
+Run `main.py`:
+
+```sh
+python main.py
+```
+
+Replace `python` with the actual Python binary installed on your system (typically `py -3` on Windows, `python3` on Linux, etc.)
