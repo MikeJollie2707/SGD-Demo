@@ -100,8 +100,9 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
                 velocity = momentum * velocity + gradient
             else:
                 velocity = gradient
+            
+            weights -= lr / batch_size * velocity
 
-            weights -= lr * velocity / batch_size
 
         # [1, x] * [[b], [m]] -> [b + x * m]
         predictions = X_bias @ weights
