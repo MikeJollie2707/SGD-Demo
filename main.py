@@ -157,7 +157,8 @@ def losses(X_bias, y, weights):
     # This norm is calculated by sum(abs(matrix[i][c]) ** 2, i=0->n) ** (1/2)
     # Since this operation conveniently sum up all the loss for a particular (b, m), we want to
     # undo the sqrt at the end, hence ** 2.
-    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2) ** 2
+    # Finally, divided by size(X) to obtain the actual cost as per ERM.
+    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2) ** 2 / len(X_bias)
     return all_losses
 
 
