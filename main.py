@@ -22,14 +22,15 @@ MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum. Don't set momentum too high
 
 # Configure graph:
 CENTER_ON = (4, 3)  # Should be on the expected value.
-EPOCH_PER_POINT = 100  # Number of points to plot = EPOCHS / EPOCH_PER_POINT.
+EPOCH_PER_POINT = 100 # Number of points to plot = EPOCHS / EPOCH_PER_POINT + 1 (init) + 1 (final).
 CONTOUR_LAYOUT = np.concat(
     (
-        np.arange(0, 200, 50),
-        np.arange(200, 500, 100),
-        np.arange(500, 10000, 1000),
+        np.linspace(1, 2, 3),
+        np.arange(3, 5, 1),
+        np.arange(5, 50, 5),
+        np.arange(50, 100, 10),
     )
-)  # np.arange(start, stop, step)
+)  # np.arange(start, stop, step) or # np.linspace(start, stop, num)
 
 
 # We'd like to find m and b that best fit this data.
@@ -72,14 +73,25 @@ def gradient_LSE_lnalg(weights, X_batch, y_batch):
     return 2 * X_batch.T @ (X_batch @ weights - y_batch)
 
 
+def eval_cost(X_bias, weights, y, *, cost_fn=LSE):
+    # [1, x] * [[b], [m]] -> [b + x * m]
+    predictions = X_bias @ weights
+    cost = np.mean(cost_fn(predictions, y))
+    return cost
+
 def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     X_size = len(X)
     # [[b], [m]]
     weights = rng.standard_normal((2, 1))
 
-    cost_history = []
-    beta_history = []
+    initial_cost = eval_cost(X_bias, weights, y)
+    print(f"Epoch: init, cost: {initial_cost}")
+    print(f"Beta:\n{weights}")
+    print("===================")
+
+    cost_history = [initial_cost]
+    beta_history = [weights.copy()]
 
     for epoch in range(epochs):
         # Move the rows only, keep the column the same.
@@ -100,23 +112,21 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
                 velocity = momentum * velocity + gradient
             else:
                 velocity = gradient
+            
+            weights -= lr / batch_size * velocity
 
-            weights -= lr * velocity / batch_size
 
-        # [1, x] * [[b], [m]] -> [b + x * m]
-        predictions = X_bias @ weights
-        cost = np.mean(LSE(predictions, y))
+        cost = eval_cost(X_bias, weights, y)
         beta_history.append(weights.copy())
         cost_history.append(cost)
 
-        if epoch % 100 == 0:
+        if epoch % EPOCH_PER_POINT == 0:
             print(f"Epoch: {epoch}, cost: {cost}")
             print(f"Beta:\n{weights}")
             print("===================")
 
     print(f"Final: m={weights[1][0]}, b={weights[0][0]}")
-    predictions = X_bias @ weights
-    cost = np.mean(LSE(predictions, y))
+    cost = eval_cost(X_bias, weights, y)
     print(f"Cost: {cost}")
 
     return beta_history, cost_history
@@ -147,7 +157,8 @@ def losses(X_bias, y, weights):
     # This norm is calculated by sum(abs(matrix[i][c]) ** 2, i=0->n) ** (1/2)
     # Since this operation conveniently sum up all the loss for a particular (b, m), we want to
     # undo the sqrt at the end, hence ** 2.
-    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2) ** 2
+    # Finally, divided by size(X) to obtain the actual cost as per ERM.
+    all_losses = np.linalg.norm(loss_matrix, axis=0, ord=2) ** 2 / len(X_bias)
     return all_losses
 
 
@@ -166,7 +177,8 @@ def get_points_info(length: int):
 
 
 def plot3d(*, center_on, beta_history, spanning_radius=6):
-    beta_history = beta_history[::EPOCH_PER_POINT]
+    selected_index = [0] + list(range(1, len(beta_history), EPOCH_PER_POINT)) + [-1]
+    beta_history = [beta_history[i] for i in selected_index]
     b, m = center_on
     b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
@@ -214,7 +226,8 @@ def plot3d(*, center_on, beta_history, spanning_radius=6):
 
 
 def plot_contour(*, center_on, beta_history, spanning_radius=6):
-    beta_history = beta_history[::EPOCH_PER_POINT]
+    selected_index = [0] + list(range(1, len(beta_history), EPOCH_PER_POINT)) + [-1]
+    beta_history = [beta_history[i] for i in selected_index]
     b, m = center_on
     b_range = np.arange(b - spanning_radius, b + spanning_radius, 0.05)
     m_range = np.arange(m - spanning_radius, m + spanning_radius, 0.05)
@@ -244,7 +257,7 @@ def plot_contour(*, center_on, beta_history, spanning_radius=6):
         all_losses,
         levels=CONTOUR_LAYOUT,
     )
-    ax.clabel(cs, cs.levels, fmt=lambda x: f"{x:.0f}", fontsize=10)
+    ax.clabel(cs, cs.levels, fmt=lambda x: f"{x:.2g}", fontsize=10)
 
     colors, markers, sizes = get_points_info(len(beta_history))
     # Plot lines connecting the points to show the order of traversal.
