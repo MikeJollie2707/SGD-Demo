@@ -47,10 +47,15 @@ EPOCHS = 1000
 BATCH_SIZE = 10
 MOMENTUM = 0.9
 CENTER_ON = (4, 3)
-CONTOUR_MIN = 20
-CONTOUR_MAX = 400
-CONTOUR_STEP = 25
 EPOCH_PER_POINT = 100
+CONTOUR_LAYOUT = np.concat(
+    (
+        np.linspace(1, 2, 3),
+        np.arange(3, 5, 1),
+        np.arange(5, 50, 5),
+        np.arange(50, 100, 10),
+    )
+)
 ```
 
 ## Setup
