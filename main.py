@@ -73,14 +73,25 @@ def gradient_LSE_lnalg(weights, X_batch, y_batch):
     return 2 * X_batch.T @ (X_batch @ weights - y_batch)
 
 
+def eval_cost(X_bias, weights, y, *, cost_fn=LSE):
+    # [1, x] * [[b], [m]] -> [b + x * m]
+    predictions = X_bias @ weights
+    cost = np.mean(cost_fn(predictions, y))
+    return cost
+
 def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     X_size = len(X)
     # [[b], [m]]
     weights = rng.standard_normal((2, 1))
 
-    cost_history = []
-    beta_history = []
+    initial_cost = eval_cost(X_bias, weights, y)
+    print(f"Epoch: init, cost: {initial_cost}")
+    print(f"Beta:\n{weights}")
+    print("===================")
+
+    cost_history = [initial_cost]
+    beta_history = [weights.copy()]
 
     for epoch in range(epochs):
         # Move the rows only, keep the column the same.
@@ -105,9 +116,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
             weights -= lr / batch_size * velocity
 
 
-        # [1, x] * [[b], [m]] -> [b + x * m]
-        predictions = X_bias @ weights
-        cost = np.mean(LSE(predictions, y))
+        cost = eval_cost(X_bias, weights, y)
         beta_history.append(weights.copy())
         cost_history.append(cost)
 
@@ -117,8 +126,7 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
             print("===================")
 
     print(f"Final: m={weights[1][0]}, b={weights[0][0]}")
-    predictions = X_bias @ weights
-    cost = np.mean(LSE(predictions, y))
+    cost = eval_cost(X_bias, weights, y)
     print(f"Cost: {cost}")
 
     return beta_history, cost_history
