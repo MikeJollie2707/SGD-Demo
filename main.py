@@ -22,7 +22,9 @@ MOMENTUM = 0.9  # Between 0 and 1; 0 is no momentum. Don't set momentum too high
 
 # Configure graph:
 CENTER_ON = (4, 3)  # Should be on the expected value.
-EPOCH_PER_POINT = 100 # Number of points to plot = EPOCHS / EPOCH_PER_POINT + 1 (init) + 1 (final).
+EPOCH_PER_POINT = (
+    100  # Number of points to plot = EPOCHS / EPOCH_PER_POINT + 1 (init) + 1 (final).
+)
 CONTOUR_LAYOUT = np.concat(
     (
         np.linspace(1, 2, 3),
@@ -79,6 +81,7 @@ def eval_cost(X_bias, weights, y, *, cost_fn=LSE):
     cost = np.mean(cost_fn(predictions, y))
     return cost
 
+
 def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
     # https://www.geeksforgeeks.org/ml-stochastic-gradient-descent-sgd/
     X_size = len(X)
@@ -112,9 +115,8 @@ def sgd(X, y, *, lr, epochs, batch_size, momentum=0):
                 velocity = momentum * velocity + gradient
             else:
                 velocity = gradient
-            
-            weights -= lr / batch_size * velocity
 
+            weights -= lr / batch_size * velocity
 
         cost = eval_cost(X_bias, weights, y)
         beta_history.append(weights.copy())
